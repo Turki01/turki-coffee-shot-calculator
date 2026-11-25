@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="حاسبة وصفات الإسبريسو المجانية من TURKI STUDIO">
+  <title>TURKI STUDIO | Coffee Shot Calculator</title>
+  <style>
+    :root{color-scheme:dark;--bg:#17120f;--panel:#241b16;--line:#49352a;--text:#f7eee5;--muted:#c1a997;--accent:#d6a36a}
+    *{box-sizing:border-box} body{margin:0;background:radial-gradient(ellipse at top,#39271b 0%,var(--bg) 55%);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh;padding:24px}
+    .wrap{max-width:760px;margin:auto}.brand{letter-spacing:.14em;color:var(--accent);font-size:.8rem;font-weight:700}.hero{margin:24px 0 28px}.hero h1{font-size:clamp(2rem,6vw,3.4rem);margin:8px 0}.hero p{color:var(--muted);line-height:1.8}
+    .card{background:rgba(36,27,22,.94);border:1px solid var(--line);border-radius:22px;padding:22px;box-shadow:0 20px 60px #0003}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+    label{display:block;color:var(--muted);font-size:.9rem;margin-bottom:8px} input,select{width:100%;background:#160f0c;color:var(--text);border:1px solid var(--line);border-radius:12px;padding:14px;font:inherit;outline:none}input:focus,select:focus{border-color:var(--accent)}
+    .result{margin-top:18px;border-radius:16px;background:#302116;padding:18px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;text-align:center}.result small{display:block;color:var(--muted);margin-bottom:6px}.result strong{font-size:1.4rem;color:var(--accent)}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}button{border:0;border-radius:12px;padding:12px 18px;font:inherit;font-weight:700;cursor:pointer;background:var(--accent);color:#20150d}button.secondary{background:transparent;border:1px solid var(--line);color:var(--text)}
+    .saved{margin-top:22px}.saved h2{font-size:1.1rem}.saved-list{display:grid;gap:8px}.recipe{border:1px solid var(--line);border-radius:12px;padding:12px;color:var(--muted);display:flex;justify-content:space-between;gap:10px}
+    footer{color:var(--muted);font-size:.8rem;text-align:center;margin:22px 0}
+    @media(max-width:520px){body{padding:16px}.grid{grid-template-columns:1fr}.result{grid-template-columns:1fr}.card{padding:16px}}
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <div class="brand">TURKI STUDIO</div>
+  <header class="hero">
+    <h1>حاسبة شوت الإسبريسو</h1>
+    <p>اضبط وصفة قهوتك بدقة. أدخل جرعة البن ونسبة الاستخلاص، واحسب وزن المشروب المستهدف خلال ثوانٍ.</p>
+  </header>
+  <section class="card" aria-label="حاسبة الإسبريسو">
+    <div class="grid">
+      <div><label for="dose">جرعة البن (جرام)</label><input id="dose" type="number" min="1" max="50" step="0.1" value="18"></div>
+      <div><label for="ratio">نسبة الاستخلاص</label><select id="ratio"><option value="1.5">1 : 1.5 — رستريتو</option><option value="2" selected>1 : 2 — إسبريسو</option><option value="2.5">1 : 2.5 — لونقو</option><option value="3">1 : 3</option></select></div>
+      <div><label for="time">وقت الاستخلاص (ثانية)</label><input id="time" type="number" min="1" max="120" step="1" value="28"></div>
+      <div><label for="roast">درجة التحميص</label><select id="roast"><option>فاتح</option><option>متوسط</option><option selected>غامق</option></select></div>
+    </div>
+    <div class="result" aria-live="polite">
+      <div><small>وزن المشروب المستهدف</small><strong id="yield">36.0 g</strong></div>
+      <div><small>نسبة القهوة</small><strong id="ratioText">1 : 2</strong></div>
+      <div><small>الوقت المسجل</small><strong id="timeText">28 s</strong></div>
+    </div>
+    <div class="actions">
+      <button id="save">حفظ الوصفة</button>
+      <button class="secondary" id="reset">إعادة ضبط</button>
+    </div>
+    <div class="saved"><h2>وصفاتك المحفوظة</h2><div id="recipes" class="saved-list"><p class="muted">ما حفظت أي وصفة للحين.</p></div></div>
+  </section>
+  <footer>مشروع مفتوح المصدر — TURKI STUDIO · الإصدار التجريبي 0.1</footer>
+</main>
+<script>
+  const $ = id => document.getElementById(id);
+  const fields = ["dose","ratio","time","roast"];
+  function calculate(){
+    const dose = Math.max(0, Number($("dose").value)||0);
+    const ratio = Number($("ratio").value);
+    const time = Math.max(0, Number($("time").value)||0);
+    $("yield").textContent = (dose*ratio).toFixed(1)+" g";
+    $("ratioText").textContent = "1 : "+ratio;
+    $("timeText").textContent = time+" s";
+  }
+  fields.forEach(id => $(id).addEventListener("input",calculate));
+  function getRecipe(){return {dose:Number($("dose").value),ratio:Number($("ratio").value),time:Number($("time").value),roast:$("roast").value,yield:(Number($("dose").value)*Number($("ratio").value)).toFixed(1)}}
+  function render(){
+    const recipes=JSON.parse(localStorage.getItem("turki-coffee-recipes")||"[]");
+    $("recipes").innerHTML="";
+    if(!recipes.length){$("recipes").innerHTML="<p>ما حفظت أي وصفة للحين.</p>";return}
+    recipes.forEach((r,i)=>{
+      const row=document.createElement("div");row.className="recipe";
+      const text=document.createElement("span");text.textContent=`${r.dose}g · 1:${r.ratio} · ${r.yield}g خروج · ${r.time}s · ${r.roast}`;
+      const del=document.createElement("button");del.className="secondary";del.textContent="حذف";del.onclick=()=>{recipes.splice(i,1);localStorage.setItem("turki-coffee-recipes",JSON.stringify(recipes));render()};
+      row.append(text,del);$("recipes").append(row);
+    });
+  }
+  $("save").onclick=()=>{const recipes=JSON.parse(localStorage.getItem("turki-coffee-recipes")||"[]");recipes.unshift(getRecipe());localStorage.setItem("turki-coffee-recipes",JSON.stringify(recipes));render()};
+  $("reset").onclick=()=>{$("dose").value=18;$("ratio").value=2;$("time").value=28;$("roast").value="غامق";calculate()};
+  calculate();render();
+</script>
+</body>
+</html>
